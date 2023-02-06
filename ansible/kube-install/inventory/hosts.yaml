@@ -1,0 +1,32 @@
+all:
+  hosts:
+    kubemaster1:
+      ansible_host: "192.168.121.30"
+    kubemaster2:
+      ansible_host: "192.168.121.30"
+    kubemaster3:
+      ansible_host: "192.168.121.30"
+    kubenode1:
+      ansible_host: "192.168.121.123"
+    kubenode2:
+      ansible_host: "192.168.121.2"
+    kubenode3:
+      ansible_host: "192.168.121.2"
+    kubenode4:
+      ansible_host: "192.168.121.2"
+  children:
+    kubemaster:
+      hosts:
+        kubemaster1:
+    kubemasterjoin:
+      hosts:
+        kubemaster2:
+        kubemaster3:        
+    kubenode:
+      hosts:
+        kubenode1:
+        kubenode2:
+        kubenode3:
+        kubenode4:
+  vars:
+    ansible_user: ansible

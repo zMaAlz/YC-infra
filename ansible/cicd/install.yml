@@ -1,0 +1,6 @@
+---
+- name: Join the other masters
+  host: kubemasterjoin
+    - name: Join the other masters
+      become: true
+      ansible.builtin.shell: yum install -y  kubectl --disableexcludes=kubernetes

@@ -1,0 +1,7 @@
+---
+LOAD_BALANCER_IP: "192.168.1.210"
+POD_NETWORK_CIDR: "10.244.0.0/16"
+KUBE_CONTROL_NODE_MASTER: "192.168.1.10"
+CNI_POD: "https://docs.projectcalico.org/manifests/calico.yaml"
+JOIN_MASTER: ""
+JOIN_WORKER: ""

@@ -1,0 +1,9 @@
+---
+- name: Join the other masters
+  host: kubemasterjoin
+    - name: Join the other masters
+      ansible.builtin.shell: {{ JOIN_MASTER }}
+- name: Join Worker nodes
+  host: kubenode
+    - name: Join Worker nodes
+      ansible.builtin.shell: {{ JOIN_WORKER }}
