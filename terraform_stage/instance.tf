@@ -1,6 +1,7 @@
 resource "yandex_compute_instance" "nat-instance" {
-  name        = "nat-instance-${var.YC_ACTIVE_ZONE}"
+  name        = "nat-${var.YC_ACTIVE_ZONE}"
   folder_id   = "${yandex_resourcemanager_folder.WORK_FOLDER.id}"
+  hostname = "nat-${var.YC_ACTIVE_ZONE}"
   platform_id = "standard-v1"
   zone        = var.YC_ACTIVE_ZONE
   resources {
@@ -25,10 +26,10 @@ resource "yandex_compute_instance" "nat-instance" {
     preemptible = true
   }  
 }
-
 resource "yandex_compute_instance" "cicd-instance" {
-  name        = "cicd-instance-${var.YC_ACTIVE_ZONE}"
+  name        = "cicd-${var.YC_ACTIVE_ZONE}"
   folder_id   = "${yandex_resourcemanager_folder.WORK_FOLDER.id}"
+  hostname = "cicd-${var.YC_ACTIVE_ZONE}"
   platform_id = "standard-v1"
   zone        = var.YC_ACTIVE_ZONE
   resources {
@@ -52,10 +53,10 @@ resource "yandex_compute_instance" "cicd-instance" {
     preemptible = true
   }  
 }
-
 resource "yandex_compute_instance" "loadbalancer-instance" {
-  name        = "loadbalancer-instance-${var.YC_ACTIVE_ZONE}"
+  name        = "loadbalancer-${var.YC_ACTIVE_ZONE}"
   folder_id   = "${yandex_resourcemanager_folder.WORK_FOLDER.id}"
+  hostname = "lb-${var.YC_ACTIVE_ZONE}"
   platform_id = "standard-v1"
   zone        = var.YC_ACTIVE_ZONE
   resources {
@@ -79,12 +80,13 @@ resource "yandex_compute_instance" "loadbalancer-instance" {
     preemptible = true
   }  
 }
-
 resource "yandex_compute_instance_group" "kubeingress-group-lb" {
   name               = "kubeingress-group-lb"
   folder_id          = "${yandex_resourcemanager_folder.WORK_FOLDER.id}"
   service_account_id = "${yandex_iam_service_account.robot.id}"
-  instance_template {    
+  instance_template {  
+    name = "kubeingress-{instance.index}"
+    hostname = "kubeingress-{instance.index}"
     labels = { 
       kube = "ingress"
     }
@@ -138,6 +140,8 @@ resource "yandex_compute_instance_group" "kubemaster-group" {
   folder_id          = "${yandex_resourcemanager_folder.WORK_FOLDER.id}"
   service_account_id = "${yandex_iam_service_account.robot.id}"
   instance_template {
+    name = "kubemaster-{instance.index}"
+    hostname = "kubemaster-{instance.index}"
     labels = { 
       kube = "master"
     }
@@ -184,6 +188,8 @@ resource "yandex_compute_instance_group" "kubenodes-group" {
   folder_id          = "${yandex_resourcemanager_folder.WORK_FOLDER.id}"
   service_account_id = "${yandex_iam_service_account.robot.id}"
   instance_template {
+    name = "kubenodes-{instance.index}"
+    hostname = "kubenodes-{instance.index}"
     labels = {
       kube = "nodes"
     }
@@ -231,11 +237,19 @@ output "instance_nat_ip_addr_nat-instance" {
 output "instance_ip_addr_nat-instance" {
   value = "${yandex_compute_instance.nat-instance.network_interface.0.ip_address}"
 }
-
 output "instance_ip_addr_cicd-instance" {
   value = "${yandex_compute_instance.cicd-instance.network_interface.0.ip_address}"
 }
-
 output "instance_ip_addr_lb-instance" {
   value = "${yandex_compute_instance.loadbalancer-instance.network_interface.0.ip_address}"
+}
+
+output "instance_ip_addr_kubenodes-instance" {
+  value = "${yandex_compute_instance_group.kubenodes-group.instance_template.0.network_interface.0.ip_address}"
+}
+output "instance_ip_addr_kubemaster-instance" {
+  value = "${yandex_compute_instance_group.kubemaster-group.instance_template.0.network_interface.0.ip_address}"
+}
+output "instance_ip_addr_kubeingress-instance" {
+  value = "${yandex_compute_instance_group.kubeingress-group-lb.instance_template.0.network_interface.0.ip_address}"
 }

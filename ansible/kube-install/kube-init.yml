@@ -1,8 +1,9 @@
 ---
 - name: Initialize the Kubernetes Cluster from the first master node
-  host: kubemaster
+  hosts: kubemaster
   tasks:
-    - name: Init master node 
+    - name: Init master node
+      become: true
       ansible.builtin.shell: kubeadm init --control-plane-endpoint {{ LOAD_BALANCER_IP }}:6443 --upload-certs --pod-network-cidr {{ POD_NETWORK_CIDR }} --apiserver-advertise-address={{ KUBE_CONTROL_NODE_MASTER }}
     - name: Add dir .kube
       ansible.builtin.file:
@@ -10,7 +11,6 @@
         state: directory
         mode: '0775'
     - name: Add kube config in home dir
-      ecome: true
       ansible.builtin.shell: cp -i /etc/kubernetes/admin.conf $HOME/.kube/config && sudo chown $(id -u):$(id -g) $HOME/.kube/config
     - name: Deploy pod network
       ansible.builtin.shell: kubectl apply -f {{ CNI_POD }}

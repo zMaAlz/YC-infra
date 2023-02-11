@@ -81,7 +81,7 @@
       ansible.builtin.yum_repository:
         name: docker-ce
         description: docker-ce YUM repo
-        baseurl: "https://download.docker.com/linux/centos/{{ FEDORA_VERSION }}/x86_64/stable/"
+        baseurl: "https://download.docker.com/linux/fedora/{{ FEDORA_VERSION }}/x86_64/stable/"
       when: os_release.stdout.find('Fedora') != -1
   tasks:
     - name: Install Docker

@@ -1,10 +1,13 @@
 ---
 - name: Forwarding IPv4 and letting iptables see bridged traffic
-  host: all
+  hosts: all
   handlers:
-    - name: Start modules and Apply sysctl params
+    - name: Start modules
       become: true
-      ansible.builtin.command: " modprobe overlay && modprobe br_netfilter && sysctl --system"
+      ansible.builtin.command: "modprobe overlay && modprobe br_netfilter"
+    - name: Apply sysctl params
+      become: true
+      ansible.builtin.command: "sysctl --system"
   pre_tasks:
     - name: Save the contents of /etc/os-release
       command: cat /etc/os-release
@@ -13,46 +16,58 @@
       debug:
         msg: "Find on CentOS|Fedora..."
       when: os_release.stdout.find('CentOS') != -1 or os_release.stdout.find('Fedora') != -1
+      changed_when: False
   tasks:
-    - name: Add modules in kore
+    - name: Turn Off swap
+      become: true
+      ansible.builtin.shell: swapoff -a
+    - name: Add modules in core
       become: true
       ansible.builtin.template:
-        src: "templates/k8s.conf "
+        src: "templates/k8s.conf"
         dest: "/etc/modules-load.d/k8s.conf"
+      notify: Start modules
     - name: Add params sysctl
       become: true
       ansible.builtin.template:
-        src: "templates/K8s.conf "
-        dest: "/etc/sysctl.d/k8s.conf"    
-      notify: Start modules and Apply sysctl params
+        src: "templates/K8s.conf"
+        dest: "/etc/sysctl.d/K8s.conf"    
+      notify: Apply sysctl params
     - name: Disable SELinux
+      become: true
       ansible.posix.selinux:
         state: disabled
     - name: Add repository CentOS|Fedora
       become: true
       ansible.builtin.template:
-        src: "templates/kubernetes.repo "
+        src: "templates/kubernetes.repo"
         dest: "/etc/yum.repos.d/kubernetes.repo"
       when: os_release.stdout.find('CentOS') != -1 or os_release.stdout.find('Fedora') != -1
   post_tasks:
     - name: Install kube packages
       become: true
       ansible.builtin.yum:
-        name:
-          - containerd
-          - kubelet
-          - kubeadm
-          - kubectl
+        name: "{{ packages }}"
+        state: present
+        update_cache: true
+      vars:
+        packages:
+        - containerd
+        - kubelet
+        - kubeadm
+        - kubectl
+      async: 180
+      poll: 20
       when: os_release.stdout.find('CentOS') != -1 or os_release.stdout.find('Fedora') != -1
     - name: Start containerd
       become: true
       ansible.builtin.systemd:
         name: containerd
         enabled: true
-        state: reloaded
+        state: started
     - name: Start kubelet
       become: true
       ansible.builtin.systemd:
         name: kubelet
         enabled: true
-        state: reloaded
+        state: started
